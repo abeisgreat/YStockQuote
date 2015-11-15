@@ -12,7 +12,7 @@
 
 
 import urllib, datetime
-
+from urllib import request
 
 """
 This is the "ystockquote" module.
@@ -57,7 +57,7 @@ technical_keys = {
 
 def __request(symbol, stat):
     url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
-    return urllib.urlopen(url).read().strip().strip('"')
+    return str(request.urlopen(url).read()).strip().strip('"')
 
 def __build_get(st):
     def __get(sy):
@@ -67,33 +67,33 @@ def __build_get(st):
 def __build_get_technical(technical):
     def __get_technical(symbol, points):
         url = "http://chartapi.finance.yahoo.com/instrument/1.0/%s/chartdata;type=%s/csv?period=%i" % (symbol, technical, points)
-        csv = urllib.urlopen(url).readlines()
+        csv = request.urlopen(url).readlines()
         return float(csv[-1:][0].split(',')[1])
     return __get_technical
 
 def get_all(symbol):
     """
     Get all available quote data for the given ticker symbol.
-    
+
     Returns a dictionary.
     """
     values = __request(symbol, ''.join(yahoo_keys.values())).split(',')
     data = {}
     for x, key in enumerate(yahoo_keys):
-        data[key] = values[x] 
+        data[key] = values[x]
     return data
 
 
-    
+
 def get_historical_prices(symbol, start_datetime, end_datetime):
     """
     Get the historical prices for a given ticker symbol.
-    
+
     Returns a nested list.
     """
     # Date, Open, High, Low, Close, Volume, Adj
     start_date  = start_datetime.strftime("%Y%m%d") # Convert our nice Datetimes into Yahoo's date format
-    end_date    = end_datetime.strftime("%Y%m%d")  # See above 
+    end_date    = end_datetime.strftime("%Y%m%d")  # See above
 
     request_data = {
         'a': str(int(start_date[4:6]) - 1),
@@ -105,21 +105,21 @@ def get_historical_prices(symbol, start_datetime, end_datetime):
     }
 
     url = 'http://ichart.yahoo.com/table.csv?s=%s&g=d&ignore=.csv' % symbol
-    for key in request_data: 
+    for key in request_data:
         url += '&%s=%s' % (key, request_data[key]) # Create the URL based on request_data
 
-    days = urllib.urlopen(url).readlines() # Load the CSV
+    days = request.urlopen(url).readlines() # Load the CSV
     data = [day[:-2].split(',') for day in days] # Split the CSV sheet
 
     tdata = []  # Type'd Data version of Data
     for row in sorted(data[1:]): # Reverse and loop through our data
-        tdata.append([ 
-            datetime.datetime(int(row[0][0:4]), int(row[0][5:7]), int(row[0][8:10])), 
-            float(row[1]), 
-            float(row[2]), 
-            float(row[3]), 
-            float(row[4]), 
-            int(row[5]), 
+        tdata.append([
+            datetime.datetime(int(row[0][0:4]), int(row[0][5:7]), int(row[0][8:10])),
+            float(row[1]),
+            float(row[2]),
+            float(row[3]),
+            float(row[4]),
+            int(row[5]),
             float(row[6])
         ]) # Convert everything to the right types
 
